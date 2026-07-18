@@ -13,7 +13,7 @@
         <activity
             android:name=".MainActivity"
             android:exported="true"
-            andorid:clearTaskOnLaunch="true"
+            android:clearTaskOnLaunch="true"
             android:launchMode="singleInstance"
             android:stateNotNeeded="true">
             <intent-filter>
@@ -25,4 +25,3 @@
 
     </application>
 </manifest>
-

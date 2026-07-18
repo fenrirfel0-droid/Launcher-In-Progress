@@ -1,1 +1,18 @@
+# Android Studio / Gradle build files
+*.iml
+.gradle
+/local.properties
+/.idea/caches
+/.idea/libraries
+/.idea/modules.xml
+/.idea/workspace.xml
+/.idea/nav/jsFiles.xml
+/build
+.DS_Store
+/capture
+.externalNativeBuild
+.cxx
+
+# App specific build files
+/app/build
 

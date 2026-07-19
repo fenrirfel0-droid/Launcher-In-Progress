@@ -4,11 +4,12 @@ plugins {
 }
 
 android {
-    namespace = "com.fenrirfel0.launcher"
+    // Matches your actual folder path: com/pocketlaunch/launcher
+    namespace = "com.pocketlaunch.launcher"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.fenrirfel0.launcher"
+        applicationId = "com.pocketlaunch.launcher"
         minSdk = 26
         targetSdk = 34
         versionCode = 1

@@ -4,7 +4,6 @@ plugins {
 }
 
 android {
-    // Matches your actual folder path: com/pocketlaunch/launcher
     namespace = "com.pocketlaunch.launcher"
     compileSdk = 34
 
@@ -16,6 +15,13 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    // Force Gradle to look directly into your specific nested folder paths
+    sourceSets {
+        getByName("main") {
+            java.setSrcDirs(listOf("src/main/java", "src/main/java/com/pocketlaunch/launcher"))
+        }
     }
 
     buildTypes {

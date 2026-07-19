@@ -21,7 +21,7 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // 🚀 FORCE FULLSCREEN (Hides Battery, Clock, and Navigation Bar)
+        // FORCE FULLSCREEN (Hides Battery, Clock, and Navigation Bar)
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
             window.insetsController?.hide(WindowInsets.Type.statusBars() or WindowInsets.Type.navigationBars())
             window.insetsController?.systemBarsBehavior = WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
@@ -32,7 +32,7 @@ class MainActivity : AppCompatActivity() {
                     or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY)
         }
 
-        // ⬜ THE MAIN CONTAINER (Horizontal split)
+        // THE MAIN CONTAINER (Horizontal split)
         val rootLayout = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             setBackgroundColor(Color.parseColor("#000000")) // Pure Black
@@ -42,13 +42,13 @@ class MainActivity : AppCompatActivity() {
             )
         }
 
-        // --- 👈 LEFT PANEL (Navigation Menu) ---
+        // --- LEFT PANEL (Navigation Menu) ---
         val sideMenu = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             setBackgroundColor(Color.parseColor("#0A0A0A")) // Very dark grey
             setPadding(40, 60, 40, 60)
             layoutParams = LinearLayout.LayoutParams(
-                0, ViewGroup.LayoutParams.MATCH_PARENT, 1f // Takes up 1 part of the screen
+                0, ViewGroup.LayoutParams.MATCH_PARENT, 1f
             )
         }
         
@@ -61,7 +61,6 @@ class MainActivity : AppCompatActivity() {
             setPadding(0, 0, 0, 80)
         }
         
-        // Menu Tabs
         val homeBtn = createMenuButton("Home", isSelected = true)
         val modsBtn = createMenuButton("Mods", isSelected = false)
         val settingsBtn = createMenuButton("Settings", isSelected = false)
@@ -71,22 +70,21 @@ class MainActivity : AppCompatActivity() {
         sideMenu.addView(modsBtn)
         sideMenu.addView(settingsBtn)
 
-        // --- 👉 RIGHT PANEL (Main Dashboard Content) ---
+        // --- RIGHT PANEL (Main Dashboard Content) ---
         val mainContent = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             setPadding(80, 80, 80, 80)
             gravity = Gravity.CENTER_VERTICAL
             layoutParams = LinearLayout.LayoutParams(
-                0, ViewGroup.LayoutParams.MATCH_PARENT, 2.5f // Takes up 2.5 parts of the screen
+                0, ViewGroup.LayoutParams.MATCH_PARENT, 2.5f
             )
         }
 
-        // The Big Launch Card
         val launchCard = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             setPadding(60, 60, 60, 60)
             background = GradientDrawable().apply {
-                setColor(Color.parseColor("#121212")) // Dark grey card
+                setColor(Color.parseColor("#121212"))
                 cornerRadius = 32f
                 setStroke(2, Color.parseColor("#333333"))
             }
@@ -103,7 +101,6 @@ class MainActivity : AppCompatActivity() {
             setPadding(0, 0, 0, 60)
         }
 
-        // Action Buttons Row inside the card
         val btnLayout = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
@@ -127,10 +124,8 @@ class MainActivity : AppCompatActivity() {
         
         launchCard.addView(statusText)
         launchCard.addView(btnLayout)
-
         mainContent.addView(launchCard)
 
-        // 🧩 Assemble the UI
         rootLayout.addView(sideMenu)
         rootLayout.addView(mainContent)
 
@@ -152,9 +147,6 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    // --- 🛠️ SIMPLE UI BUILDERS ---
-
-    // Creates the side menu tabs
     private fun createMenuButton(text: String, isSelected: Boolean): TextView {
         return TextView(this).apply {
             this.text = text
@@ -173,7 +165,6 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    // Creates the Launch and Detect buttons
     private fun createActionButton(text: String, isPrimary: Boolean): Button {
         return Button(this).apply {
             this.text = text

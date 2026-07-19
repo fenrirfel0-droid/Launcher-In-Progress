@@ -19,13 +19,14 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
 
-    # 🛠️ Installs a global, clean copy of Gradle straight onto the cloud machine
+    - name: Set up Android SDK
+      uses: android-actions/setup-android@v3
+
     - name: Setup Gradle
       uses: gradle/actions/setup-gradle@v4
 
-    # 🚀 Uses global 'gradle' command instead of local './gradlew'
     - name: Compile Installer (APK)
-      run: gradle assembleDebug
+      run: gradle clean assembleDebug --stacktrace
 
     - name: Rename APK for Release
       run: mv app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/InkLaunch.apk

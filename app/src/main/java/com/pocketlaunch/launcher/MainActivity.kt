@@ -148,25 +148,25 @@ class MainActivity : AppCompatActivity() {
 
         Thread {
             try {
-                // 1. Create a private, isolated directory to hold the extracted game code
                 val optimizedDexOutputDir = getDir("mcpe_dex_cache", MODE_PRIVATE)
 
-                // 2. Build the dynamic loader that reads the uninstalled APK
                 val dexClassLoader = dalvik.system.DexClassLoader(
                     apkFile.absolutePath,
                     optimizedDexOutputDir.absolutePath,
-                    null, // TODO: Native .so shader paths will be injected here
+                    null, 
                     classLoader
                 )
 
-                // 3. Attempt to hook into the official Minecraft Bedrock main entry point
                 val mcActivityClass = dexClassLoader.loadClass("com.mojang.minecraftpe.MainActivity")
 
                 runOnUiThread {
-                    Toast.makeText(this, "Successfully hooked Minecraft Engine!", Toast.LENGTH_LONG).show()
+                    // Fire up the Proxy Screen and pass the target game data to it
+                    val proxyIntent = Intent(this@MainActivity, ProxyActivity::class.java).apply {
+                        putExtra("APK_PATH", apkFile.absolutePath)
+                        putExtra("CLASS_NAME", mcActivityClass.name)
+                    }
+                    startActivity(proxyIntent)
                 }
-
-                // 4. TODO: Start the Proxy Activity to render the game screen
 
             } catch (e: Exception) {
                 e.printStackTrace()

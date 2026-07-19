@@ -22,13 +22,13 @@ jobs:
     - name: Set up Android SDK
       uses: android-actions/setup-android@v3
 
-    - name: Generate Fresh Gradle Wrapper
-      run: gradle wrapper
+    # Forces the runner to fetch Gradle 8.2.2 so it matches your project plugins perfectly
+    - name: Generate Matching Gradle Wrapper
+      run: gradle wrapper --gradle-version 8.2.2
 
     - name: Grant Execute Permission for Gradlew
       run: chmod +x gradlew
 
-    # Appends --quiet to hide the internal Gradle junk and only print your actual code errors
     - name: Compile Launcher Installer (APK)
       run: ./gradlew assembleDebug --quiet
 

@@ -22,8 +22,9 @@ jobs:
     - name: Set up Android SDK
       uses: android-actions/setup-android@v3
 
-    - name: Setup Gradle
-      uses: gradle/actions/setup-gradle@v4
+    # Force-generates the wrapper files right on the cloud runner to bypass local file errors
+    - name: Generate Fresh Gradle Wrapper
+      run: gradle wrapper
 
     - name: Grant Execute Permission for Gradlew
       run: chmod +x gradlew

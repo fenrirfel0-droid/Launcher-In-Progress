@@ -92,8 +92,8 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    // ⚙️ UI Component Builder
-    private fun createStyledButton(text: String, colorHex: String, isPrimary: Boolean = false): Button {
+    // ⚙️ UI Component Builder (FIXED: Now properly accepts the onClick function)
+    private fun createStyledButton(text: String, colorHex: String, isPrimary: Boolean = false, onClick: () -> Unit): Button {
         return Button(this).apply {
             this.text = text
             setTextColor(if (isPrimary) Color.BLACK else Color.WHITE)
@@ -111,7 +111,8 @@ class MainActivity : AppCompatActivity() {
             ).apply {
                 setMargins(0, 20, 0, 20)
             }
-            setOnClickListener { callOnClick() }
+            // Properly binds the click event
+            setOnClickListener { onClick() }
         }
     }
 

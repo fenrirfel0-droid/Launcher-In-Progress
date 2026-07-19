@@ -17,13 +17,6 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
-    // Force Gradle to look directly into your specific nested folder paths
-    sourceSets {
-        getByName("main") {
-            java.setSrcDirs(listOf("src/main/java", "src/main/java/com/pocketlaunch/launcher"))
-        }
-    }
-
     buildTypes {
         release {
             isMinifyEnabled = false

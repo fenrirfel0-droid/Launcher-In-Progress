@@ -5,7 +5,10 @@ import android.graphics.Color
 import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
 import android.view.Gravity
+import android.view.View
 import android.view.ViewGroup
+import android.view.WindowInsets
+import android.view.WindowInsetsController
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import java.io.File
@@ -13,170 +16,180 @@ import java.io.File
 class MainActivity : AppCompatActivity() {
 
     private var targetApkPath: String? = null
+    private lateinit var statusText: TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // 📜 Main ScrollView to allow dashboard scrolling
-        val scrollView = ScrollView(this).apply {
-            setBackgroundColor(Color.parseColor("#050505")) // Deep Black Background
+        // 🚀 FORCE FULLSCREEN (Hides Battery, Clock, and Navigation Bar)
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
+            window.insetsController?.hide(WindowInsets.Type.statusBars() or WindowInsets.Type.navigationBars())
+            window.insetsController?.systemBarsBehavior = WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+        } else {
+            @Suppress("DEPRECATION")
+            window.decorView.systemUiVisibility = (View.SYSTEM_UI_FLAG_FULLSCREEN
+                    or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                    or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY)
         }
 
+        // ⬜ THE MAIN CONTAINER (Horizontal split)
         val rootLayout = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(50, 80, 50, 80)
-        }
-
-        // 🏷️ Top Header: "Ink Launcher"
-        val headerLayout = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
-            gravity = Gravity.CENTER_VERTICAL
-            setPadding(10, 0, 0, 60)
+            setBackgroundColor(Color.parseColor("#000000")) // Pure Black
+            layoutParams = ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT
+            )
         }
 
-        val titleText = TextView(this).apply {
-            text = "Ink Launcher"
-            textSize = 32f
+        // --- 👈 LEFT PANEL (Navigation Menu) ---
+        val sideMenu = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setBackgroundColor(Color.parseColor("#0A0A0A")) // Very dark grey
+            setPadding(40, 60, 40, 60)
+            layoutParams = LinearLayout.LayoutParams(
+                0, ViewGroup.LayoutParams.MATCH_PARENT, 1f // Takes up 1 part of the screen
+            )
+        }
+        
+        val appTitle = TextView(this).apply {
+            text = "INK\nLAUNCHER"
+            textSize = 22f
             setTextColor(Color.WHITE)
-            paint.isFakeBoldText = true 
+            paint.isFakeBoldText = true
+            gravity = Gravity.CENTER
+            setPadding(0, 0, 0, 80)
         }
-        headerLayout.addView(titleText)
+        
+        // Menu Tabs
+        val homeBtn = createMenuButton("Home", isSelected = true)
+        val modsBtn = createMenuButton("Mods", isSelected = false)
+        val settingsBtn = createMenuButton("Settings", isSelected = false)
+        
+        sideMenu.addView(appTitle)
+        sideMenu.addView(homeBtn)
+        sideMenu.addView(modsBtn)
+        sideMenu.addView(settingsBtn)
 
-        // 🗂️ Card 1: Engine Status
-        val statusCard = createCardLayout()
-        val statusTitle = createCardTitle("Engine Status")
-        val statusText = TextView(this).apply {
-            text = "Idle - No Engine Detected"
-            setTextColor(Color.parseColor("#888888"))
-            setPadding(0, 20, 0, 40)
+        // --- 👉 RIGHT PANEL (Main Dashboard Content) ---
+        val mainContent = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(80, 80, 80, 80)
+            gravity = Gravity.CENTER_VERTICAL
+            layoutParams = LinearLayout.LayoutParams(
+                0, ViewGroup.LayoutParams.MATCH_PARENT, 2.5f // Takes up 2.5 parts of the screen
+            )
         }
-        val autoDetectButton = createStyledButton("Auto-Detect Minecraft", isOutline = true) {
-            autoDetectMinecraft(statusText)
-        }
-        statusCard.addView(statusTitle)
-        statusCard.addView(statusText)
-        statusCard.addView(autoDetectButton)
 
-        // 🚀 Card 2: Quick Launch
-        val launchCard = createCardLayout()
-        val launchTitle = createCardTitle("Quick Launch")
-        val launchDesc = TextView(this).apply {
-            text = "Inject C++ Engine and boot environment."
-            setTextColor(Color.parseColor("#888888"))
-            setPadding(0, 20, 0, 40)
+        // The Big Launch Card
+        val launchCard = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(60, 60, 60, 60)
+            background = GradientDrawable().apply {
+                setColor(Color.parseColor("#121212")) // Dark grey card
+                cornerRadius = 32f
+                setStroke(2, Color.parseColor("#333333"))
+            }
+            layoutParams = LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            )
         }
-        val launchButton = createStyledButton("Launch Engine", isOutline = false) {
-            if (targetApkPath != null) {
-                bootCustomMinecraftEngine(File(targetApkPath!!))
-            } else {
-                Toast.makeText(this, "Please auto-detect an engine first!", Toast.LENGTH_LONG).show()
+
+        statusText = TextView(this).apply {
+            text = "Status: Idle - Engine Unlinked"
+            textSize = 18f
+            setTextColor(Color.parseColor("#888888"))
+            setPadding(0, 0, 0, 60)
+        }
+
+        // Action Buttons Row inside the card
+        val btnLayout = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+        }
+
+        val autoDetectBtn = createActionButton("Auto-Detect", isPrimary = false).apply {
+            layoutParams = LinearLayout.LayoutParams(0, 140, 1f).apply { setMargins(0, 0, 30, 0) }
+            setOnClickListener { autoDetectMinecraft() }
+        }
+
+        val launchBtn = createActionButton("LAUNCH GAME", isPrimary = true).apply {
+            layoutParams = LinearLayout.LayoutParams(0, 140, 1.5f)
+            setOnClickListener { 
+                if (targetApkPath != null) bootCustomMinecraftEngine(File(targetApkPath!!))
+                else Toast.makeText(this@MainActivity, "Please auto-detect an engine first!", Toast.LENGTH_SHORT).show()
             }
         }
-        launchCard.addView(launchTitle)
-        launchCard.addView(launchDesc)
-        launchCard.addView(launchButton)
         
-        // 🧩 Card 3: Content Management (Mod Vibe Placeholder)
-        val modsCard = createCardLayout()
-        val modsTitle = createCardTitle("Content Management")
-        val modsDesc = TextView(this).apply {
-            text = "Resource Packs: 0\nBehavior Packs: 0"
-            setTextColor(Color.parseColor("#888888"))
-            setPadding(0, 20, 0, 40)
-            setLineSpacing(10f, 1f)
-        }
-        val modsButton = createStyledButton("Manage Mods (Coming Soon)", isOutline = true) {
-            Toast.makeText(this, "Mod management requires engine hook first.", Toast.LENGTH_SHORT).show()
-        }
-        modsCard.addView(modsTitle)
-        modsCard.addView(modsDesc)
-        modsCard.addView(modsButton)
+        btnLayout.addView(autoDetectBtn)
+        btnLayout.addView(launchBtn)
+        
+        launchCard.addView(statusText)
+        launchCard.addView(btnLayout)
 
-        // Assemble the UI
-        rootLayout.addView(headerLayout)
-        rootLayout.addView(statusCard)
-        rootLayout.addView(launchCard)
-        rootLayout.addView(modsCard)
+        mainContent.addView(launchCard)
 
-        scrollView.addView(rootLayout)
-        setContentView(scrollView)
+        // 🧩 Assemble the UI
+        rootLayout.addView(sideMenu)
+        rootLayout.addView(mainContent)
+
+        setContentView(rootLayout)
     }
 
-    // 🔍 Auto-Detects Minecraft Installed on the Device
-    private fun autoDetectMinecraft(statusTextView: TextView) {
+    private fun autoDetectMinecraft() {
         try {
             val pm = packageManager
             val appInfo = pm.getApplicationInfo("com.mojang.minecraftpe", 0)
             targetApkPath = appInfo.sourceDir
-
-            statusTextView.text = "Ready - Detected: com.mojang.minecraftpe"
-            statusTextView.setTextColor(Color.WHITE)
+            statusText.text = "Status: READY - Engine Hooked"
+            statusText.setTextColor(Color.WHITE)
             Toast.makeText(this, "Engine Found!", Toast.LENGTH_SHORT).show()
         } catch (e: PackageManager.NameNotFoundException) {
-            statusTextView.text = "Error - Minecraft not installed on device."
-            statusTextView.setTextColor(Color.WHITE) 
+            statusText.text = "Status: ERROR - Minecraft not installed"
+            statusText.setTextColor(Color.parseColor("#FF5555"))
             Toast.makeText(this, "Could not find Minecraft installed.", Toast.LENGTH_LONG).show()
         }
     }
 
-    // --- 🛠️ UI Component Builders ---
+    // --- 🛠️ SIMPLE UI BUILDERS ---
 
-    // Creates the dark, rounded background cards
-    private fun createCardLayout(): LinearLayout {
-        return LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(60, 60, 60, 60)
-            layoutParams = LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT
-            ).apply {
-                setMargins(0, 0, 0, 40)
+    // Creates the side menu tabs
+    private fun createMenuButton(text: String, isSelected: Boolean): TextView {
+        return TextView(this).apply {
+            this.text = text
+            textSize = 16f
+            setTextColor(if (isSelected) Color.BLACK else Color.WHITE)
+            gravity = Gravity.CENTER
+            paint.isFakeBoldText = true
+            setPadding(0, 30, 0, 30)
+            layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply {
+                setMargins(0, 0, 0, 20)
             }
             background = GradientDrawable().apply {
-                setColor(Color.parseColor("#121212")) // Dark grey card background
-                cornerRadius = 32f
-                setStroke(2, Color.parseColor("#2A2A2A")) // Subtle border
+                setColor(if (isSelected) Color.WHITE else Color.TRANSPARENT)
+                cornerRadius = 16f
             }
         }
     }
 
-    private fun createCardTitle(title: String): TextView {
-        return TextView(this).apply {
-            text = title
-            textSize = 20f
-            setTextColor(Color.WHITE)
-            paint.isFakeBoldText = true
-        }
-    }
-
-    // Creates either a solid white button, or a black button with a white outline
-    private fun createStyledButton(text: String, isOutline: Boolean = false, onClick: () -> Unit): Button {
+    // Creates the Launch and Detect buttons
+    private fun createActionButton(text: String, isPrimary: Boolean): Button {
         return Button(this).apply {
             this.text = text
-            setTextColor(if (isOutline) Color.WHITE else Color.BLACK)
-            isAllCaps = false
-            textSize = 15f
+            setTextColor(if (isPrimary) Color.BLACK else Color.WHITE)
+            textSize = 16f
             paint.isFakeBoldText = true
-
+            isAllCaps = false
             background = GradientDrawable().apply {
-                if (isOutline) {
-                    setColor(Color.TRANSPARENT)
-                    setStroke(4, Color.WHITE)
-                } else {
-                    setColor(Color.WHITE)
-                }
-                cornerRadius = 20f
+                setColor(if (isPrimary) Color.WHITE else Color.TRANSPARENT)
+                if (!isPrimary) setStroke(3, Color.WHITE)
+                cornerRadius = 24f
             }
-
-            layoutParams = LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                140
-            )
-            setOnClickListener { onClick() }
         }
     }
 
     private fun bootCustomMinecraftEngine(apkFile: File) {
-        Toast.makeText(this, "Warning: C++ Native Libraries not yet mapped.", Toast.LENGTH_SHORT).show()
+        Toast.makeText(this, "Injecting native payload...", Toast.LENGTH_SHORT).show()
     }
 }

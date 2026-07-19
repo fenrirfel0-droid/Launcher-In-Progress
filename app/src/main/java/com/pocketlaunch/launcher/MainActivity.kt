@@ -24,18 +24,7 @@ class MainActivity : AppCompatActivity() {
         try {
             super.onCreate(savedInstanceState)
 
-            // FORCE FULLSCREEN (Hides Battery, Clock, and Navigation Bar)
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
-                window.insetsController?.hide(WindowInsets.Type.statusBars() or WindowInsets.Type.navigationBars())
-                window.insetsController?.systemBarsBehavior = WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-            } else {
-                @Suppress("DEPRECATION")
-                window.decorView.systemUiVisibility = (View.SYSTEM_UI_FLAG_FULLSCREEN
-                        or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                        or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY)
-            }
-
-            // THE MAIN CONTAINER (Horizontal split)
+            // 1. CREATE THE MAIN CONTAINER FIRST (Horizontal split)
             val rootLayout = LinearLayout(this).apply {
                 orientation = LinearLayout.HORIZONTAL
                 setBackgroundColor(Color.parseColor("#000000")) // Pure Black
@@ -132,10 +121,27 @@ class MainActivity : AppCompatActivity() {
             rootLayout.addView(sideMenu)
             rootLayout.addView(mainContent)
 
+            // 2. ATTACH THE LAYOUT TO THE WINDOW BEFORE DOING SYSTEM UI WORK
             setContentView(rootLayout)
 
+            // 3. SAFE FULLSCREEN TRIGGER (Executes immediately after the window attaches)
+            window.decorView.post {
+                try {
+                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
+                        window.insetsController?.hide(WindowInsets.Type.statusBars() or WindowInsets.Type.navigationBars())
+                        window.insetsController?.systemBarsBehavior = WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+                    } else {
+                        @Suppress("DEPRECATION")
+                        window.decorView.systemUiVisibility = (View.SYSTEM_UI_FLAG_FULLSCREEN
+                                or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                                or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY)
+                    }
+                } catch (e: Exception) {
+                    // Fallback to prevent layout injection crashes if the controller behaves strangely
+                }
+            }
+
         } catch (t: Throwable) {
-            // DIAGNOSTIC SCREEN: Captures initialization crashes instantly
             val sw = StringWriter()
             t.printStackTrace(PrintWriter(sw))
             val errorLayout = ScrollView(this).apply {

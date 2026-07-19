@@ -1,6 +1,5 @@
 package com.pocketlaunch.launcher
 
-import android.app.Activity
 import android.content.pm.PackageManager
 import android.graphics.Color
 import android.graphics.drawable.GradientDrawable
@@ -11,124 +10,145 @@ import android.view.ViewGroup
 import android.view.WindowInsets
 import android.view.WindowInsetsController
 import android.widget.*
+import androidx.appcompat.app.AppCompatActivity
 import java.io.File
+import java.io.PrintWriter
+import java.io.StringWriter
 
-class MainActivity : Activity() { // <-- Changed from AppCompatActivity to Activity to fix the crash
+class MainActivity : AppCompatActivity() {
 
     private var targetApkPath: String? = null
     private lateinit var statusText: TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
+        try {
+            super.onCreate(savedInstanceState)
 
-        // FORCE FULLSCREEN
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
-            window.insetsController?.hide(WindowInsets.Type.statusBars() or WindowInsets.Type.navigationBars())
-            window.insetsController?.systemBarsBehavior = WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-        } else {
-            @Suppress("DEPRECATION")
-            window.decorView.systemUiVisibility = (View.SYSTEM_UI_FLAG_FULLSCREEN
-                    or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                    or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY)
-        }
-
-        val rootLayout = LinearLayout(this).apply {
-            orientation = LinearLayout.HORIZONTAL
-            setBackgroundColor(Color.parseColor("#000000"))
-            layoutParams = ViewGroup.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.MATCH_PARENT
-            )
-        }
-
-        // LEFT PANEL
-        val sideMenu = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            setBackgroundColor(Color.parseColor("#0A0A0A"))
-            setPadding(40, 60, 40, 60)
-            layoutParams = LinearLayout.LayoutParams(
-                0, ViewGroup.LayoutParams.MATCH_PARENT, 1f
-            )
-        }
-        
-        val appTitle = TextView(this).apply {
-            text = "INK\nLAUNCHER"
-            textSize = 22f
-            setTextColor(Color.WHITE)
-            paint.isFakeBoldText = true
-            gravity = Gravity.CENTER
-            setPadding(0, 0, 0, 80)
-        }
-        
-        val homeBtn = createMenuButton("Home", isSelected = true)
-        val modsBtn = createMenuButton("Mods", isSelected = false)
-        val settingsBtn = createMenuButton("Settings", isSelected = false)
-        
-        sideMenu.addView(appTitle)
-        sideMenu.addView(homeBtn)
-        sideMenu.addView(modsBtn)
-        sideMenu.addView(settingsBtn)
-
-        // RIGHT PANEL
-        val mainContent = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(80, 80, 80, 80)
-            gravity = Gravity.CENTER_VERTICAL
-            layoutParams = LinearLayout.LayoutParams(
-                0, ViewGroup.LayoutParams.MATCH_PARENT, 2.5f
-            )
-        }
-
-        val launchCard = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(60, 60, 60, 60)
-            background = GradientDrawable().apply {
-                setColor(Color.parseColor("#121212"))
-                cornerRadius = 32f
-                setStroke(2, Color.parseColor("#333333"))
+            // FORCE FULLSCREEN (Hides Battery, Clock, and Navigation Bar)
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
+                window.insetsController?.hide(WindowInsets.Type.statusBars() or WindowInsets.Type.navigationBars())
+                window.insetsController?.systemBarsBehavior = WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+            } else {
+                @Suppress("DEPRECATION")
+                window.decorView.systemUiVisibility = (View.SYSTEM_UI_FLAG_FULLSCREEN
+                        or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                        or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY)
             }
-            layoutParams = LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT
-            )
-        }
 
-        statusText = TextView(this).apply {
-            text = "Status: Idle - Engine Unlinked"
-            textSize = 18f
-            setTextColor(Color.parseColor("#888888"))
-            setPadding(0, 0, 0, 60)
-        }
-
-        val btnLayout = LinearLayout(this).apply {
-            orientation = LinearLayout.HORIZONTAL
-            layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
-        }
-
-        val autoDetectBtn = createActionButton("Auto-Detect", isPrimary = false).apply {
-            layoutParams = LinearLayout.LayoutParams(0, 140, 1f).apply { setMargins(0, 0, 30, 0) }
-            setOnClickListener { autoDetectMinecraft() }
-        }
-
-        val launchBtn = createActionButton("LAUNCH GAME", isPrimary = true).apply {
-            layoutParams = LinearLayout.LayoutParams(0, 140, 1.5f)
-            setOnClickListener { 
-                if (targetApkPath != null) bootCustomMinecraftEngine(File(targetApkPath!!))
-                else Toast.makeText(this@MainActivity, "Please auto-detect an engine first!", Toast.LENGTH_SHORT).show()
+            // THE MAIN CONTAINER (Horizontal split)
+            val rootLayout = LinearLayout(this).apply {
+                orientation = LinearLayout.HORIZONTAL
+                setBackgroundColor(Color.parseColor("#000000")) // Pure Black
+                layoutParams = ViewGroup.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.MATCH_PARENT
+                )
             }
+
+            // --- LEFT PANEL (Navigation Menu) ---
+            val sideMenu = LinearLayout(this).apply {
+                orientation = LinearLayout.VERTICAL
+                setBackgroundColor(Color.parseColor("#0A0A0A")) // Very dark grey
+                setPadding(40, 60, 40, 60)
+                layoutParams = LinearLayout.LayoutParams(
+                    0, ViewGroup.LayoutParams.MATCH_PARENT, 1f
+                )
+            }
+            
+            val appTitle = TextView(this).apply {
+                text = "INK\nLAUNCHER"
+                textSize = 22f
+                setTextColor(Color.WHITE)
+                paint.isFakeBoldText = true
+                gravity = Gravity.CENTER
+                setPadding(0, 0, 0, 80)
+            }
+            
+            val homeBtn = createMenuButton("Home", isSelected = true)
+            val modsBtn = createMenuButton("Mods", isSelected = false)
+            val settingsBtn = createMenuButton("Settings", isSelected = false)
+            
+            sideMenu.addView(appTitle)
+            sideMenu.addView(homeBtn)
+            sideMenu.addView(modsBtn)
+            sideMenu.addView(settingsBtn)
+
+            // --- RIGHT PANEL (Main Dashboard Content) ---
+            val mainContent = LinearLayout(this).apply {
+                orientation = LinearLayout.VERTICAL
+                setPadding(80, 80, 80, 80)
+                gravity = Gravity.CENTER_VERTICAL
+                layoutParams = LinearLayout.LayoutParams(
+                    0, ViewGroup.LayoutParams.MATCH_PARENT, 2.5f
+                )
+            }
+
+            val launchCard = LinearLayout(this).apply {
+                orientation = LinearLayout.VERTICAL
+                setPadding(60, 60, 60, 60)
+                background = GradientDrawable().apply {
+                    setColor(Color.parseColor("#121212"))
+                    cornerRadius = 32f
+                    setStroke(2, Color.parseColor("#333333"))
+                }
+                layoutParams = LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT
+                )
+            }
+
+            statusText = TextView(this).apply {
+                text = "Status: Idle - Engine Unlinked"
+                textSize = 18f
+                setTextColor(Color.parseColor("#888888"))
+                setPadding(0, 0, 0, 60)
+            }
+
+            val btnLayout = LinearLayout(this).apply {
+                orientation = LinearLayout.HORIZONTAL
+                layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+            }
+
+            val autoDetectBtn = createActionButton("Auto-Detect", isPrimary = false).apply {
+                layoutParams = LinearLayout.LayoutParams(0, 140, 1f).apply { setMargins(0, 0, 30, 0) }
+                setOnClickListener { autoDetectMinecraft() }
+            }
+
+            val launchBtn = createActionButton("LAUNCH GAME", isPrimary = true).apply {
+                layoutParams = LinearLayout.LayoutParams(0, 140, 1.5f)
+                setOnClickListener { 
+                    if (targetApkPath != null) bootCustomMinecraftEngine(File(targetApkPath!!))
+                    else Toast.makeText(this@MainActivity, "Please auto-detect an engine first!", Toast.LENGTH_SHORT).show()
+                }
+            }
+            
+            btnLayout.addView(autoDetectBtn)
+            btnLayout.addView(launchBtn)
+            
+            launchCard.addView(statusText)
+            launchCard.addView(btnLayout)
+            mainContent.addView(launchCard)
+
+            rootLayout.addView(sideMenu)
+            rootLayout.addView(mainContent)
+
+            setContentView(rootLayout)
+
+        } catch (t: Throwable) {
+            // DIAGNOSTIC SCREEN: Captures initialization crashes instantly
+            val sw = StringWriter()
+            t.printStackTrace(PrintWriter(sw))
+            val errorLayout = ScrollView(this).apply {
+                setBackgroundColor(Color.WHITE)
+                addView(TextView(this@MainActivity).apply {
+                    text = "INK LAUNCHER ENGINE EXCEPTION REPORT:\n\n$sw"
+                    setTextColor(Color.RED)
+                    textSize = 14f
+                    setPadding(40, 40, 40, 40)
+                })
+            }
+            setContentView(errorLayout)
         }
-        
-        btnLayout.addView(autoDetectBtn)
-        btnLayout.addView(launchBtn)
-        
-        launchCard.addView(statusText)
-        launchCard.addView(btnLayout)
-        mainContent.addView(launchCard)
-
-        rootLayout.addView(sideMenu)
-        rootLayout.addView(mainContent)
-
-        setContentView(rootLayout)
     }
 
     private fun autoDetectMinecraft() {

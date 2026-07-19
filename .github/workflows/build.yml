@@ -22,14 +22,15 @@ jobs:
     - name: Set up Android SDK
       uses: android-actions/setup-android@v3
 
-    # This official tool sets up Gradle 8.2.2 safely in the background
+    # Uses a globally available, stable Gradle build version
     - name: Setup Gradle Build Environment
       uses: gradle/actions/setup-gradle@v4
       with:
-        gradle-version: '8.2.2'
+        gradle-version: '8.5'
 
+    # Executes a clean compile task using the runner's built-in environment
     - name: Compile Launcher Installer (APK)
-      run: gradle assembleDebug --quiet
+      run: gradle assembleDebug
 
     - name: Upload Compiled APK to Artifacts
       uses: actions/upload-artifact@v4

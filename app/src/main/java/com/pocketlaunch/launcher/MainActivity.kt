@@ -12,8 +12,6 @@ import android.provider.Settings
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
-import android.view.WindowInsets
-import android.view.WindowInsetsController
 import android.widget.*
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
@@ -34,7 +32,6 @@ class MainActivity : AppCompatActivity() {
     private lateinit var modsLayout: LinearLayout
     private lateinit var settingsLayout: LinearLayout
 
-    // Native File Picker
     private val filePickerLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
         uri?.let { handleSelectedFile(it) }
     }
@@ -44,21 +41,20 @@ class MainActivity : AppCompatActivity() {
             super.onCreate(savedInstanceState)
             autoDetectMinecraft()
 
-            val rootLayout = LinearLayout(this).apply {
+            val rootLayout = LinearLayout(this@MainActivity).apply {
                 orientation = LinearLayout.HORIZONTAL
                 setBackgroundColor(Color.parseColor("#000000")) 
                 layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
             }
 
-            // Left Panel
-            val sideMenu = LinearLayout(this).apply {
+            val sideMenu = LinearLayout(this@MainActivity).apply {
                 orientation = LinearLayout.VERTICAL
                 setBackgroundColor(Color.parseColor("#0A0A0A"))
                 setPadding(40, 60, 40, 60)
                 layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 1f)
             }
             
-            val appTitle = TextView(this).apply {
+            val appTitle = TextView(this@MainActivity).apply {
                 text = "INK\nLAUNCHER"
                 textSize = 22f
                 setTextColor(Color.WHITE)
@@ -80,8 +76,7 @@ class MainActivity : AppCompatActivity() {
             sideMenu.addView(modsBtn)
             sideMenu.addView(settingsBtn)
 
-            // Right Panel
-            val mainContent = LinearLayout(this).apply {
+            val mainContent = LinearLayout(this@MainActivity).apply {
                 orientation = LinearLayout.VERTICAL
                 setPadding(80, 80, 80, 80)
                 gravity = Gravity.CENTER_VERTICAL
@@ -100,13 +95,13 @@ class MainActivity : AppCompatActivity() {
             rootLayout.addView(mainContent)
 
             setContentView(rootLayout)
-            enforceFullscreen()
+            enforceFullscreenSafely()
             switchTab(0)
 
         } catch (t: Throwable) {
             val sw = StringWriter()
             t.printStackTrace(PrintWriter(sw))
-            setContentView(ScrollView(this).apply {
+            setContentView(ScrollView(this@MainActivity).apply {
                 setBackgroundColor(Color.WHITE)
                 addView(TextView(this@MainActivity).apply {
                     text = "CRASH LOG:\n\n$sw"
@@ -118,12 +113,12 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun buildHomeLayout(): LinearLayout {
-        return LinearLayout(this).apply {
+        return LinearLayout(this@MainActivity).apply {
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.CENTER
             layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
 
-            val launchBtn = Button(this).apply {
+            val launchBtn = Button(this@MainActivity).apply {
                 text = "LAUNCH GAME & INJECT MENU"
                 setTextColor(Color.BLACK)
                 textSize = 18f
@@ -153,12 +148,12 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun buildModsLayout(): LinearLayout {
-        return LinearLayout(this).apply {
+        return LinearLayout(this@MainActivity).apply {
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.CENTER
             layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
             
-            val importBtn = Button(this).apply {
+            val importBtn = Button(this@MainActivity).apply {
                 text = "IMPORT PLUGIN (.so / .zip)"
                 setTextColor(Color.WHITE)
                 textSize = 16f
@@ -176,7 +171,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun buildPlaceholderScreen(title: String): LinearLayout {
-        return LinearLayout(this).apply {
+        return LinearLayout(this@MainActivity).apply {
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.CENTER
             layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
@@ -199,8 +194,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun showImportDialog(fileName: String, uri: Uri) {
-        val dialog = Dialog(this).apply { window?.setBackgroundDrawableResource(android.R.color.transparent) }
-        val container = LinearLayout(this).apply {
+        val dialog = Dialog(this@MainActivity).apply { window?.setBackgroundDrawableResource(android.R.color.transparent) }
+        val container = LinearLayout(this@MainActivity).apply {
             orientation = LinearLayout.VERTICAL
             setPadding(60, 60, 60, 60)
             background = GradientDrawable().apply {
@@ -211,7 +206,7 @@ class MainActivity : AppCompatActivity() {
             layoutParams = ViewGroup.LayoutParams(600, ViewGroup.LayoutParams.WRAP_CONTENT)
         }
 
-        val title = TextView(this).apply {
+        val title = TextView(this@MainActivity).apply {
             text = "Import Plugin?"
             textSize = 20f
             setTextColor(Color.WHITE)
@@ -219,15 +214,15 @@ class MainActivity : AppCompatActivity() {
             setPadding(0, 0, 0, 20)
         }
 
-        val fileText = TextView(this).apply {
+        val fileText = TextView(this@MainActivity).apply {
             text = fileName
             textSize = 14f
             setTextColor(Color.parseColor("#888888"))
             setPadding(0, 0, 0, 60)
         }
 
-        val btnLayout = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
-        val cancelBtn = Button(this).apply {
+        val btnLayout = LinearLayout(this@MainActivity).apply { orientation = LinearLayout.HORIZONTAL }
+        val cancelBtn = Button(this@MainActivity).apply {
             text = "Cancel"
             setTextColor(Color.WHITE)
             background = GradientDrawable().apply { setColor(Color.TRANSPARENT) }
@@ -235,7 +230,7 @@ class MainActivity : AppCompatActivity() {
             setOnClickListener { dialog.dismiss() }
         }
 
-        val confirmBtn = Button(this).apply {
+        val confirmBtn = Button(this@MainActivity).apply {
             text = "Import"
             setTextColor(Color.BLACK)
             background = GradientDrawable().apply { setColor(Color.WHITE); cornerRadius = 16f }
@@ -312,7 +307,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun createMenuButton(text: String): TextView {
-        return TextView(this).apply {
+        return TextView(this@MainActivity).apply {
             this.text = text
             textSize = 16f
             gravity = Gravity.CENTER
@@ -322,17 +317,16 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun enforceFullscreen() {
-        window.decorView.post {
-            try {
-                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
-                    window.insetsController?.hide(WindowInsets.Type.statusBars() or WindowInsets.Type.navigationBars())
-                    window.insetsController?.systemBarsBehavior = WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-                } else {
-                    @Suppress("DEPRECATION")
-                    window.decorView.systemUiVisibility = (View.SYSTEM_UI_FLAG_FULLSCREEN or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY)
-                }
-            } catch (e: Exception) {}
+    private fun enforceFullscreenSafely() {
+        try {
+            @Suppress("DEPRECATION")
+            window.decorView.systemUiVisibility = (
+                View.SYSTEM_UI_FLAG_FULLSCREEN 
+                or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION 
+                or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+            )
+        } catch (e: Exception) {
+            // Failsafe so the app won't crash even if hiding the bar fails
         }
     }
 }

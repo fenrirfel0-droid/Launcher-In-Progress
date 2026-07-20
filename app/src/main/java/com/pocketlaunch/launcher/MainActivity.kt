@@ -28,14 +28,14 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val rootLayout = LinearLayout(this).apply {
+        val rootLayout = LinearLayout(this@MainActivity).apply {
             orientation = LinearLayout.VERTICAL
             setBackgroundColor(Color.parseColor(bgDark))
             layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
         }
 
         // --- TOP HEADER ---
-        val topNav = LinearLayout(this).apply {
+        val topNav = LinearLayout(this@MainActivity).apply {
             orientation = LinearLayout.HORIZONTAL
             setPadding(60, 40, 60, 40)
             gravity = Gravity.CENTER_VERTICAL
@@ -45,8 +45,8 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        val appTitle = TextView(this).apply {
-            text = "InkLauncher" // Removed "Unlocked"
+        val appTitle = TextView(this@MainActivity).apply {
+            text = "InkLauncher" 
             textSize = 22f
             setTextColor(Color.parseColor(textWhite))
             typeface = Typeface.DEFAULT_BOLD
@@ -61,7 +61,7 @@ class MainActivity : AppCompatActivity() {
         topNav.addView(btnSettingsTab)
 
         // --- CONTENT FRAME ---
-        contentContainer = FrameLayout(this).apply {
+        contentContainer = FrameLayout(this@MainActivity).apply {
             layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f)
         }
 
@@ -94,14 +94,13 @@ class MainActivity : AppCompatActivity() {
 
     // --- MAIN DASHBOARD (CLEAN UI) ---
     private fun buildLaunchDashboard(): ScrollView {
-        val scroller = ScrollView(this).apply { layoutParams = FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT) }
-        val mainLayout = LinearLayout(this).apply {
+        val scroller = ScrollView(this@MainActivity).apply { layoutParams = FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT) }
+        val mainLayout = LinearLayout(this@MainActivity).apply {
             orientation = LinearLayout.VERTICAL
             setPadding(60, 50, 60, 50)
         }
 
-        // Title Header
-        val header = TextView(this).apply {
+        val header = TextView(this@MainActivity).apply {
             text = "Minecraft"
             textSize = 36f
             setTextColor(Color.parseColor(textWhite))
@@ -110,11 +109,9 @@ class MainActivity : AppCompatActivity() {
         }
         mainLayout.addView(header)
 
-        // Split Layout (Left: Content, Right: Action)
-        val splitGrid = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
+        val splitGrid = LinearLayout(this@MainActivity).apply { orientation = LinearLayout.HORIZONTAL }
 
-        // Left Column (Cards)
-        val leftCol = LinearLayout(this).apply {
+        val leftCol = LinearLayout(this@MainActivity).apply {
             orientation = LinearLayout.VERTICAL
             layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1.2f)
             setPadding(0, 0, 30, 0)
@@ -131,14 +128,13 @@ class MainActivity : AppCompatActivity() {
         leftCol.addView(contentCard)
         leftCol.addView(utilCard)
 
-        // Right Column (Launch)
-        val rightCol = LinearLayout(this).apply {
+        val rightCol = LinearLayout(this@MainActivity).apply {
             orientation = LinearLayout.VERTICAL
             layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 1f)
             gravity = Gravity.BOTTOM
         }
 
-        val bigLaunchBtn = Button(this).apply {
+        val bigLaunchBtn = Button(this@MainActivity).apply {
             text = "LAUNCH"
             setTextColor(Color.parseColor(bgDark))
             textSize = 18f
@@ -146,13 +142,12 @@ class MainActivity : AppCompatActivity() {
             layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 160)
             background = GradientDrawable().apply {
                 setColor(Color.parseColor(textWhite))
-                cornerRadius = 12f // Tighter, cleaner corners
+                cornerRadius = 12f 
             }
             setOnClickListener { triggerLaunch() }
         }
 
         rightCol.addView(bigLaunchBtn)
-
         splitGrid.addView(leftCol)
         splitGrid.addView(rightCol)
         mainLayout.addView(splitGrid)
@@ -162,10 +157,10 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun buildSettingsDashboard(): ScrollView {
-        val scroller = ScrollView(this).apply { visibility = View.GONE }
-        val layout = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(60, 50, 60, 50) }
+        val scroller = ScrollView(this@MainActivity).apply { visibility = View.GONE }
+        val layout = LinearLayout(this@MainActivity).apply { orientation = LinearLayout.VERTICAL; setPadding(60, 50, 60, 50) }
         
-        layout.addView(TextView(this).apply {
+        layout.addView(TextView(this@MainActivity).apply {
             text = "Engine Settings"
             textSize = 28f
             setTextColor(Color.parseColor(textWhite))
@@ -182,9 +177,9 @@ class MainActivity : AppCompatActivity() {
         return scroller
     }
 
-    // --- UI HELPERS ---
+    // --- UI HELPERS (Context FIXED here) ---
     private fun createNavText(textStr: String, isActive: Boolean): TextView {
-        return TextView(this).apply {
+        return TextView(this@MainActivity).apply {
             text = textStr
             textSize = 16f
             setTextColor(Color.parseColor(if (isActive) textWhite else textGray))
@@ -193,7 +188,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun createCleanCard(title: String): LinearLayout {
-        val card = LinearLayout(this).apply {
+        val card = LinearLayout(this@MainActivity).apply {
             orientation = LinearLayout.VERTICAL
             setPadding(40, 40, 40, 40)
             background = GradientDrawable().apply {
@@ -205,7 +200,7 @@ class MainActivity : AppCompatActivity() {
                 setMargins(0, 0, 0, 30)
             }
         }
-        card.addView(TextView(this).apply {
+        card.addView(TextView(this@MainActivity).apply {
             text = title
             textSize = 14f
             setTextColor(Color.parseColor(textGray))
@@ -216,25 +211,25 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun createIconRow(iconRes: Int, title: String, subtitle: String): LinearLayout {
-        val row = LinearLayout(this).apply {
+        val row = LinearLayout(this@MainActivity).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
             setPadding(0, 20, 0, 20)
         }
         
-        val icon = ImageView(this).apply {
+        val icon = ImageView(this@MainActivity).apply {
             setImageResource(iconRes)
             setColorFilter(Color.parseColor(textWhite))
             layoutParams = LinearLayout.LayoutParams(60, 60).apply { setMargins(0, 0, 30, 0) }
         }
 
-        val textBlock = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
-        textBlock.addView(TextView(this).apply {
+        val textBlock = LinearLayout(this@MainActivity).apply { orientation = LinearLayout.VERTICAL }
+        textBlock.addView(TextView(this@MainActivity).apply {
             text = title
             setTextColor(Color.parseColor(textWhite))
             textSize = 16f
         })
-        textBlock.addView(TextView(this).apply {
+        textBlock.addView(TextView(this@MainActivity).apply {
             text = subtitle
             setTextColor(Color.parseColor(textGray))
             textSize = 12f
@@ -246,26 +241,27 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun createSettingToggle(label: String, defaultState: Boolean): LinearLayout {
-        return LinearLayout(this).apply {
+        val row = LinearLayout(this@MainActivity).apply {
             orientation = LinearLayout.HORIZONTAL
             setPadding(0, 20, 0, 20)
             gravity = Gravity.CENTER_VERTICAL
-            
-            addView(TextView(this).apply {
-                text = label
-                setTextColor(Color.parseColor(textWhite))
-                textSize = 16f
-                layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
-            })
-            addView(Switch(this).apply { isChecked = defaultState })
         }
+            
+        row.addView(TextView(this@MainActivity).apply {
+            text = label
+            setTextColor(Color.parseColor(textWhite))
+            textSize = 16f
+            layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
+        })
+        row.addView(Switch(this@MainActivity).apply { isChecked = defaultState })
+        return row
     }
 
     private fun triggerLaunch() {
-        if (!Settings.canDrawOverlays(this)) {
+        if (!Settings.canDrawOverlays(this@MainActivity)) {
             startActivity(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, android.net.Uri.parse("package:$packageName")))
         } else {
-            startService(Intent(this, FloatingMenuService::class.java))
+            startService(Intent(this@MainActivity, FloatingMenuService::class.java))
             packageManager.getLaunchIntentForPackage("com.mojang.minecraftpe")?.let { startActivity(it) }
         }
     }

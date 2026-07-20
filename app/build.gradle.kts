@@ -4,12 +4,15 @@ plugins {
 }
 
 android {
-        externalNativeBuild {
+            externalNativeBuild {
         cmake {
             path = file("src/main/cpp/CMakeLists.txt")
             version = "3.22.1"
         }
     }
+
+Once you have these files in place, your UI will be connected directly to a real C++ backend, giving you the foundation for a true, native Bedrock Client engine!
+
 
     defaultConfig {
         applicationId = "com.pocketlaunch.launcher"

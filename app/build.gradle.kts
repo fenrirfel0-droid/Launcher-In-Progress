@@ -4,41 +4,53 @@ plugins {
 }
 
 android {
-            externalNativeBuild {
-        cmake {
-            path = file("src/main/cpp/CMakeLists.txt")
-            version = "3.22.1"
-        }
-    }
-
-Once you have these files in place, your UI will be connected directly to a real C++ backend, giving you the foundation for a true, native Bedrock Client engine!
-
+    namespace = "com.pocketlaunch.launcher"
+    compileSdk = 34 // Stable version for most devices
 
     defaultConfig {
         applicationId = "com.pocketlaunch.launcher"
-        minSdk = 26
+        minSdk = 24
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
 
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        // NDK Configuration
+        externalNativeBuild {
+            cmake {
+                cppFlags += "-std=c++17 -fexceptions -frtti"
+                arguments("-DANDROID_STL=c++_shared")
+            }
+        }
     }
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
         }
+        debug {
+            isDebuggable = true
+        }
     }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
+
     kotlinOptions {
         jvmTarget = "17"
+    }
+
+    // THIS IS THE CRITICAL BLOCK FOR YOUR C++ CORE
+    externalNativeBuild {
+        cmake {
+            path = file("src/main/cpp/CMakeLists.txt")
+            version = "3.22.1"
+        }
     }
 }
 

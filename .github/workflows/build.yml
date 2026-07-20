@@ -9,34 +9,36 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout the code
-      uses: actions/checkout@v3
+      - name: Checkout the code
+        uses: actions/checkout@v4
 
-    - name: Set up JDK 17
-      uses: actions/setup-java@v3
-      with:
-        java-version: '17'
-        distribution: 'temurin'
-        cache: gradle
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          # We don't cache here because the official gradle-setup action handles caching much better.
 
-    # 🛠️ THE FIX: Lock it to a verified, stable Android-compatible version
-    - name: Generate Missing Gradle Wrapper
-      run: gradle wrapper --gradle-version 8.4
+      # FIX 1: Provide a fully pre-configured Gradle environment on the runner.
+      # This bypasses the need to run "gradle wrapper" entirely.
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-version: '8.4' # Stable version for MCPE launchers
 
-    - name: Grant execute permission for gradlew
-      run: chmod +x gradlew
+      # FIX 2: Build using the 'gradle' CLI directly instead of './gradlew'
+      - name: Build the APK
+        run: gradle assembleDebug --stacktrace
 
-    - name: Build the APK
-      run: ./gradlew assembleDebug
-
-    - name: Create GitHub Release
-      uses: softprops/action-gh-release@v1
-      with:
-        tag_name: build-${{ github.run_number }}
-        name: Ink Launcher Build #${{ github.run_number }}
-        body: |
-          🚀 New automated build for Ink Launcher!
-          Download the `app-debug.apk` below to test the latest changes.
-        files: app/build/outputs/apk/debug/app-debug.apk
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # This creates your automatic GitHub release and attaches the freshly compiled APK.
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: build-${{ github.run_number }}
+          name: Ink Launcher Build #${{ github.run_number }}
+          body: |
+            🚀 New automated build for Ink Launcher!
+            Download the `Ink-Launcher.apk` below to test the latest MCPE launcher build on your phone.
+          files: app/build/outputs/apk/debug/app-debug.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

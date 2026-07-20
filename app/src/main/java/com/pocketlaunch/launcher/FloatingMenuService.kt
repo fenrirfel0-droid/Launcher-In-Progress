@@ -37,12 +37,12 @@ class FloatingMenuService : Service() {
         super.onCreate()
         windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
 
-        floatingView = LinearLayout(this).apply {
+        floatingView = LinearLayout(this@FloatingMenuService).apply {
             orientation = LinearLayout.HORIZONTAL
             layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
         }
 
-        val floatingIcon = Button(this).apply {
+        val floatingIcon = Button(this@FloatingMenuService).apply {
             text = "INK"
             setTextColor(Color.WHITE)
             textSize = 14f
@@ -55,7 +55,7 @@ class FloatingMenuService : Service() {
             layoutParams = LinearLayout.LayoutParams(130, 130)
         }
 
-        menuPanel = LinearLayout(this).apply {
+        menuPanel = LinearLayout(this@FloatingMenuService).apply {
             orientation = LinearLayout.VERTICAL
             visibility = View.GONE
             setPadding(30, 30, 30, 30)
@@ -66,13 +66,12 @@ class FloatingMenuService : Service() {
             layoutParams = LinearLayout.LayoutParams(550, 480).apply { setMargins(15, 0, 0, 0) }
         }
 
-        // Module Menu View
-        mainMenuContent = LinearLayout(this).apply {
+        mainMenuContent = LinearLayout(this@FloatingMenuService).apply {
             orientation = LinearLayout.VERTICAL
             layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
         }
 
-        val menuTitle = TextView(this).apply {
+        val menuTitle = TextView(this@FloatingMenuService).apply {
             text = "INK MOD MENU"
             setTextColor(Color.parseColor("#FFFF55")) 
             textSize = 16f
@@ -101,14 +100,13 @@ class FloatingMenuService : Service() {
         mainMenuContent.addView(hitboxesBtn)
         mainMenuContent.addView(closeMenuBtn)
 
-        // Pack Changer View
-        packChangerContent = LinearLayout(this).apply {
+        packChangerContent = LinearLayout(this@FloatingMenuService).apply {
             orientation = LinearLayout.VERTICAL
             visibility = View.GONE
             layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
         }
 
-        val packTitle = TextView(this).apply {
+        val packTitle = TextView(this@FloatingMenuService).apply {
             text = "SELECT ACTIVE PACK"
             setTextColor(Color.parseColor("#55FF55"))
             textSize = 15f
@@ -118,8 +116,8 @@ class FloatingMenuService : Service() {
             setPadding(0, 0, 0, 15)
         }
 
-        val scrollView = ScrollView(this).apply { layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f) }
-        packListContainer = LinearLayout(this).apply {
+        val scrollView = ScrollView(this@FloatingMenuService).apply { layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f) }
+        packListContainer = LinearLayout(this@FloatingMenuService).apply {
             orientation = LinearLayout.VERTICAL
             layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
         }
@@ -196,7 +194,7 @@ class FloatingMenuService : Service() {
         }
         
         if (packFiles.isNullOrEmpty()) {
-            packListContainer.addView(TextView(this).apply {
+            packListContainer.addView(TextView(this@FloatingMenuService).apply {
                 text = "(No .zip packs imported yet)"
                 setTextColor(Color.GRAY)
                 textSize = 12f
@@ -207,7 +205,7 @@ class FloatingMenuService : Service() {
     }
 
     private fun createMcpeButton(buttonText: String): Button {
-        return Button(this).apply {
+        return Button(this@FloatingMenuService).apply {
             text = buttonText
             setTextColor(Color.WHITE)
             textSize = 13f

@@ -1,17 +1,24 @@
 package com.pocketlaunch.launcher
 
+import android.app.Dialog
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Color
 import android.graphics.drawable.GradientDrawable
+import android.net.Uri
 import android.os.Bundle
+import android.provider.OpenableColumns
+import android.provider.Settings
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowInsets
 import android.view.WindowInsetsController
 import android.widget.*
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import java.io.File
+import java.io.FileOutputStream
 import java.io.PrintWriter
 import java.io.StringWriter
 
@@ -19,20 +26,23 @@ class MainActivity : AppCompatActivity() {
 
     private var targetApkPath: String? = null
     
-    // UI Elements
-    private lateinit var statusText: TextView
     private lateinit var homeBtn: TextView
     private lateinit var modsBtn: TextView
     private lateinit var settingsBtn: TextView
     
-    // Screens
     private lateinit var homeLayout: LinearLayout
     private lateinit var modsLayout: LinearLayout
     private lateinit var settingsLayout: LinearLayout
 
+    // Native File Picker
+    private val filePickerLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+        uri?.let { handleSelectedFile(it) }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         try {
             super.onCreate(savedInstanceState)
+            autoDetectMinecraft()
 
             val rootLayout = LinearLayout(this).apply {
                 orientation = LinearLayout.HORIZONTAL
@@ -40,7 +50,7 @@ class MainActivity : AppCompatActivity() {
                 layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
             }
 
-            // --- LEFT PANEL (Navigation Menu) ---
+            // Left Panel
             val sideMenu = LinearLayout(this).apply {
                 orientation = LinearLayout.VERTICAL
                 setBackgroundColor(Color.parseColor("#0A0A0A"))
@@ -57,12 +67,10 @@ class MainActivity : AppCompatActivity() {
                 setPadding(0, 0, 0, 80)
             }
             
-            // Create Tabs
             homeBtn = createMenuButton("Home")
             modsBtn = createMenuButton("Mods")
             settingsBtn = createMenuButton("Settings")
             
-            // Wire up Tab Clicks
             homeBtn.setOnClickListener { switchTab(0) }
             modsBtn.setOnClickListener { switchTab(1) }
             settingsBtn.setOnClickListener { switchTab(2) }
@@ -72,7 +80,7 @@ class MainActivity : AppCompatActivity() {
             sideMenu.addView(modsBtn)
             sideMenu.addView(settingsBtn)
 
-            // --- RIGHT PANEL (Main Container) ---
+            // Right Panel
             val mainContent = LinearLayout(this).apply {
                 orientation = LinearLayout.VERTICAL
                 setPadding(80, 80, 80, 80)
@@ -80,9 +88,8 @@ class MainActivity : AppCompatActivity() {
                 layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 2.5f)
             }
 
-            // Create the 3 different screens
             homeLayout = buildHomeLayout()
-            modsLayout = buildPlaceholderScreen("Mods & Scripts Dashboard\n(Coming Soon)")
+            modsLayout = buildModsLayout()
             settingsLayout = buildPlaceholderScreen("Launcher Settings\n(Coming Soon)")
 
             mainContent.addView(homeLayout)
@@ -92,13 +99,9 @@ class MainActivity : AppCompatActivity() {
             rootLayout.addView(sideMenu)
             rootLayout.addView(mainContent)
 
-            // Set layout and hide System UI
             setContentView(rootLayout)
             enforceFullscreen()
-
-            // Initialize app state
             switchTab(0)
-            autoDetectMinecraft() // Trigger scan instantly on launch
 
         } catch (t: Throwable) {
             val sw = StringWriter()
@@ -115,48 +118,61 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun buildHomeLayout(): LinearLayout {
-        val layout = LinearLayout(this).apply {
+        return LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
+            gravity = Gravity.CENTER
             layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
-        }
 
-        val launchCard = LinearLayout(this).apply {
+            val launchBtn = Button(this).apply {
+                text = "LAUNCH GAME & INJECT MENU"
+                setTextColor(Color.BLACK)
+                textSize = 18f
+                paint.isFakeBoldText = true
+                layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 160)
+                background = GradientDrawable().apply {
+                    setColor(Color.WHITE)
+                    cornerRadius = 24f
+                }
+                setOnClickListener { 
+                    if (targetApkPath != null) {
+                        if (!Settings.canDrawOverlays(this@MainActivity)) {
+                            Toast.makeText(this@MainActivity, "Allow 'Display over other apps' to use the Mod Menu!", Toast.LENGTH_LONG).show()
+                            startActivity(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:$packageName")))
+                        } else {
+                            startService(Intent(this@MainActivity, FloatingMenuService::class.java))
+                            val launchIntent = packageManager.getLaunchIntentForPackage("com.mojang.minecraftpe")
+                            if (launchIntent != null) startActivity(launchIntent)
+                        }
+                    } else {
+                        Toast.makeText(this@MainActivity, "Minecraft not found on device!", Toast.LENGTH_LONG).show()
+                    }
+                }
+            }
+            addView(launchBtn)
+        }
+    }
+
+    private fun buildModsLayout(): LinearLayout {
+        return LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(60, 60, 60, 60)
-            background = GradientDrawable().apply {
-                setColor(Color.parseColor("#121212"))
-                cornerRadius = 32f
-                setStroke(2, Color.parseColor("#333333"))
+            gravity = Gravity.CENTER
+            layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
+            
+            val importBtn = Button(this).apply {
+                text = "IMPORT PLUGIN (.so / .zip)"
+                setTextColor(Color.WHITE)
+                textSize = 16f
+                paint.isFakeBoldText = true
+                layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 140)
+                background = GradientDrawable().apply {
+                    setColor(Color.parseColor("#1A1A1A"))
+                    setStroke(3, Color.parseColor("#444444"))
+                    cornerRadius = 24f
+                }
+                setOnClickListener { filePickerLauncher.launch("*/*") }
             }
+            addView(importBtn)
         }
-
-        statusText = TextView(this).apply {
-            text = "Status: Scanning for game engine..."
-            textSize = 18f
-            setTextColor(Color.parseColor("#888888"))
-            setPadding(0, 0, 0, 60)
-        }
-
-        val launchBtn = Button(this).apply {
-            text = "LAUNCH GAME"
-            setTextColor(Color.BLACK)
-            textSize = 16f
-            paint.isFakeBoldText = true
-            layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 140)
-            background = GradientDrawable().apply {
-                setColor(Color.WHITE)
-                cornerRadius = 24f
-            }
-            setOnClickListener { 
-                if (targetApkPath != null) bootCustomMinecraftEngine(File(targetApkPath!!))
-                else Toast.makeText(this@MainActivity, "Minecraft not found on this device!", Toast.LENGTH_SHORT).show()
-            }
-        }
-
-        launchCard.addView(statusText)
-        launchCard.addView(launchBtn)
-        layout.addView(launchCard)
-        return layout
     }
 
     private fun buildPlaceholderScreen(title: String): LinearLayout {
@@ -164,7 +180,6 @@ class MainActivity : AppCompatActivity() {
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.CENTER
             layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
-            
             addView(TextView(this@MainActivity).apply {
                 text = title
                 textSize = 24f
@@ -174,32 +189,118 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun switchTab(tabIndex: Int) {
-        // 1. Reset all buttons to unselected
-        setTabVisuals(homeBtn, false)
-        setTabVisuals(modsBtn, false)
-        setTabVisuals(settingsBtn, false)
+    private fun handleSelectedFile(uri: Uri) {
+        val fileName = getFileName(uri) ?: "Unknown File"
+        if (fileName.endsWith(".so", ignoreCase = true) || fileName.endsWith(".zip", ignoreCase = true)) {
+            showImportDialog(fileName, uri)
+        } else {
+            Toast.makeText(this, "Invalid file! Only .so and .zip allowed.", Toast.LENGTH_SHORT).show()
+        }
+    }
 
-        // 2. Hide all screens
-        homeLayout.visibility = View.GONE
-        modsLayout.visibility = View.GONE
-        settingsLayout.visibility = View.GONE
+    private fun showImportDialog(fileName: String, uri: Uri) {
+        val dialog = Dialog(this).apply { window?.setBackgroundDrawableResource(android.R.color.transparent) }
+        val container = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(60, 60, 60, 60)
+            background = GradientDrawable().apply {
+                setColor(Color.parseColor("#121212"))
+                cornerRadius = 32f
+                setStroke(2, Color.parseColor("#333333"))
+            }
+            layoutParams = ViewGroup.LayoutParams(600, ViewGroup.LayoutParams.WRAP_CONTENT)
+        }
 
-        // 3. Highlight the selected button and show its screen
-        when (tabIndex) {
-            0 -> {
-                setTabVisuals(homeBtn, true)
-                homeLayout.visibility = View.VISIBLE
-            }
-            1 -> {
-                setTabVisuals(modsBtn, true)
-                modsLayout.visibility = View.VISIBLE
-            }
-            2 -> {
-                setTabVisuals(settingsBtn, true)
-                settingsLayout.visibility = View.VISIBLE
+        val title = TextView(this).apply {
+            text = "Import Plugin?"
+            textSize = 20f
+            setTextColor(Color.WHITE)
+            paint.isFakeBoldText = true
+            setPadding(0, 0, 0, 20)
+        }
+
+        val fileText = TextView(this).apply {
+            text = fileName
+            textSize = 14f
+            setTextColor(Color.parseColor("#888888"))
+            setPadding(0, 0, 0, 60)
+        }
+
+        val btnLayout = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
+        val cancelBtn = Button(this).apply {
+            text = "Cancel"
+            setTextColor(Color.WHITE)
+            background = GradientDrawable().apply { setColor(Color.TRANSPARENT) }
+            layoutParams = LinearLayout.LayoutParams(0, 120, 1f)
+            setOnClickListener { dialog.dismiss() }
+        }
+
+        val confirmBtn = Button(this).apply {
+            text = "Import"
+            setTextColor(Color.BLACK)
+            background = GradientDrawable().apply { setColor(Color.WHITE); cornerRadius = 16f }
+            layoutParams = LinearLayout.LayoutParams(0, 120, 1f)
+            setOnClickListener {
+                copyFileToInternalStorage(uri, fileName)
+                dialog.dismiss()
             }
         }
+
+        btnLayout.addView(cancelBtn)
+        btnLayout.addView(confirmBtn)
+        container.addView(title)
+        container.addView(fileText)
+        container.addView(btnLayout)
+        
+        dialog.setContentView(container)
+        dialog.show()
+    }
+
+    private fun copyFileToInternalStorage(uri: Uri, fileName: String) {
+        try {
+            val inputStream = contentResolver.openInputStream(uri)
+            val outFile = File(getExternalFilesDir(null), fileName)
+            val outputStream = FileOutputStream(outFile)
+            inputStream?.copyTo(outputStream)
+            inputStream?.close()
+            outputStream.close()
+            Toast.makeText(this, "Plugin Saved!", Toast.LENGTH_SHORT).show()
+        } catch (e: Exception) {
+            Toast.makeText(this, "Failed to import file.", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun getFileName(uri: Uri): String? {
+        var result: String? = null
+        if (uri.scheme == "content") {
+            contentResolver.query(uri, null, null, null, null)?.use { cursor ->
+                if (cursor.moveToFirst()) {
+                    val index = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+                    if (index != -1) result = cursor.getString(index)
+                }
+            }
+        }
+        if (result == null) result = uri.path?.substringAfterLast('/')
+        return result
+    }
+
+    private fun autoDetectMinecraft() {
+        try {
+            val appInfo = packageManager.getApplicationInfo("com.mojang.minecraftpe", 0)
+            targetApkPath = appInfo.sourceDir
+        } catch (e: PackageManager.NameNotFoundException) {
+            targetApkPath = null
+        }
+    }
+
+    private fun switchTab(tabIndex: Int) {
+        setTabVisuals(homeBtn, tabIndex == 0)
+        setTabVisuals(modsBtn, tabIndex == 1)
+        setTabVisuals(settingsBtn, tabIndex == 2)
+
+        homeLayout.visibility = if (tabIndex == 0) View.VISIBLE else View.GONE
+        modsLayout.visibility = if (tabIndex == 1) View.VISIBLE else View.GONE
+        settingsLayout.visibility = if (tabIndex == 2) View.VISIBLE else View.GONE
     }
 
     private fun setTabVisuals(button: TextView, isSelected: Boolean) {
@@ -217,22 +318,7 @@ class MainActivity : AppCompatActivity() {
             gravity = Gravity.CENTER
             paint.isFakeBoldText = true
             setPadding(0, 30, 0, 30)
-            layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply {
-                setMargins(0, 0, 0, 20)
-            }
-        }
-    }
-
-    private fun autoDetectMinecraft() {
-        try {
-            val pm = packageManager
-            val appInfo = pm.getApplicationInfo("com.mojang.minecraftpe", 0)
-            targetApkPath = appInfo.sourceDir
-            statusText.text = "Status: READY - Minecraft Hooked"
-            statusText.setTextColor(Color.parseColor("#44FF44")) // Neon Green
-        } catch (e: PackageManager.NameNotFoundException) {
-            statusText.text = "Status: ERROR - Minecraft not installed"
-            statusText.setTextColor(Color.parseColor("#FF5555")) // Red
+            layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply { setMargins(0, 0, 0, 20) }
         }
     }
 
@@ -244,15 +330,9 @@ class MainActivity : AppCompatActivity() {
                     window.insetsController?.systemBarsBehavior = WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
                 } else {
                     @Suppress("DEPRECATION")
-                    window.decorView.systemUiVisibility = (View.SYSTEM_UI_FLAG_FULLSCREEN
-                            or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                            or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY)
+                    window.decorView.systemUiVisibility = (View.SYSTEM_UI_FLAG_FULLSCREEN or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY)
                 }
             } catch (e: Exception) {}
         }
-    }
-
-    private fun bootCustomMinecraftEngine(apkFile: File) {
-        Toast.makeText(this, "Injecting Native Launcher Payload...", Toast.LENGTH_SHORT).show()
     }
 }

@@ -7,14 +7,16 @@ import com.pocketlaunch.launcher.game.module.utilities.*
 
 object ModuleManager {
 
-    private val moduleRegistry = mutableMapOf<String, Module>()
+    private const val TAG = "ModuleManager"
+    private val moduleRegistry = LinkedHashMap<String, Module>()
 
     init {
-        registerRenderModules()
-        registerUtilitiesModules()
+        // Guarantee all modules are populated when ModuleManager is accessed
+        registerDefaultModules()
     }
 
-    private fun registerRenderModules() {
+    private fun registerDefaultModules() {
+        // --- RENDER MODULES ---
         register(HitboxModule())
         register(InventoryHudModule())
         register(F3DebugModule())
@@ -22,9 +24,8 @@ object ModuleManager {
         register(CrystalOptimizerModule())
         register(CpsFpsHudModule())
         register(AttackIndicatorModule())
-    }
 
-    private fun registerUtilitiesModules() {
+        // --- UTILITIES MODULES ---
         register(QuickDropModule())
         register(ZoomModule())
         register(PerspectiveModule())
@@ -36,7 +37,7 @@ object ModuleManager {
 
     fun register(module: Module) {
         moduleRegistry[module.id] = module
-        Log.d("ModuleManager", "Registered [${module.category.displayName}]: ${module.name}")
+        Log.d(TAG, "Registered module [${module.category.displayName}]: ${module.name}")
     }
 
     fun getModule(id: String): Module? = moduleRegistry[id]

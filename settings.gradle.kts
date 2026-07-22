@@ -13,5 +13,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "Launcher-In-Progress"
+rootProject.name = "InkLauncher"
 include(":app")

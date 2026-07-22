@@ -2,6 +2,9 @@ package com.pocketlaunch.launcher.game
 
 import android.content.Context
 
+/**
+ * Base abstract class for all InkClient features and overlays.
+ */
 abstract class Module(
     val id: String,
     val name: String,
@@ -23,5 +26,11 @@ abstract class Module(
             onDisable(context)
         }
         return isEnabled
+    }
+
+    fun setEnabledState(state: Boolean, context: Context) {
+        if (isEnabled != state) {
+            toggle(context)
+        }
     }
 }

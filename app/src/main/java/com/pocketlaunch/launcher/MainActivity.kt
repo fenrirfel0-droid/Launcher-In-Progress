@@ -4,6 +4,7 @@ import android.content.Intent
 import android.graphics.Color
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
+import android.net.Uri
 import android.os.Bundle
 import android.provider.Settings
 import android.view.Gravity
@@ -11,148 +12,185 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
+import com.pocketlaunch.launcher.game.GameDirectoryManager
+import com.pocketlaunch.launcher.overlay.InkOverlayService
+import com.pocketlaunch.launcher.util.GraphicsSettingsManager
 
 class MainActivity : AppCompatActivity() {
 
-    private val bgDark = "#000000"
-    private val cardDark = "#111111"
+    private val bgVoid = "#0A0B10"
+    private val cardDark = "#131520"
+    private val cardBorder = "#1E2235"
+    private val accentPurple = "#7C3AED"
     private val textWhite = "#FFFFFF"
-    private val textGray = "#888888"
-    private val borderGray = "#222222"
+    private val textMuted = "#8A92B2"
+
+    private lateinit var graphicsManager: GraphicsSettingsManager
+    private lateinit var dirManager: GameDirectoryManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        graphicsManager = GraphicsSettingsManager(this)
+        dirManager = GameDirectoryManager(this)
 
-        val rootLayout = LinearLayout(this@MainActivity).apply {
+        val rootLayout = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            setBackgroundColor(Color.parseColor(bgDark))
-            layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
-            setPadding(60, 40, 60, 40)
+            setBackgroundColor(Color.parseColor(bgVoid))
+            setPadding(48, 40, 48, 40)
+            layoutParams = ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT
+            )
         }
 
-        val header = TextView(this@MainActivity).apply {
-            text = "InkLauncher"
-            textSize = 28f
+        rootLayout.addView(TextView(this).apply {
+            text = "InkClient Launcher & Engine Settings"
+            textSize = 20f
+            typeface = Typeface.DEFAULT_BOLD
+            setTextColor(Color.parseColor(textWhite))
+            setPadding(0, 0, 0, 24)
+        })
+
+        val scroll = ScrollView(this).apply {
+            layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f)
+            isVerticalScrollBarEnabled = false
+        }
+
+        val cardContainer = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+        }
+
+        // Setting 1: VSync Disabler
+        cardContainer.addView(createSettingRow(
+            title = "Disable V-Sync",
+            subtitle = "Removes frame timing constraints to reduce latency.",
+            widget = Switch(this).apply {
+                setOnCheckedChangeListener { _, isChecked -> graphicsManager.setVSyncDisabled(isChecked) }
+            }
+        ))
+
+        // Setting 2: FPS Uncapper
+        val fpsLabel = TextView(this).apply {
+            text = "Unlimited FPS"
+            setTextColor(Color.parseColor(accentPurple))
+            textSize = 12f
+            typeface = Typeface.DEFAULT_BOLD
+        }
+        val fpsSeek = SeekBar(this).apply {
+            max = 240
+            progress = 0
+            layoutParams = LinearLayout.LayoutParams(280, ViewGroup.LayoutParams.WRAP_CONTENT)
+            setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+                override fun onProgressChanged(sb: SeekBar?, valVal: Int, fromUser: Boolean) {
+                    fpsLabel.text = if (valVal == 0) "Unlimited" else "$valVal FPS"
+                    graphicsManager.setFpsUncapped(valVal)
+                }
+                override fun onStartTrackingTouch(sb: SeekBar?) {}
+                override fun onStopTrackingTouch(sb: SeekBar?) {}
+            })
+        }
+        val fpsBlock = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            gravity = Gravity.END
+            addView(fpsLabel)
+            addView(fpsSeek)
+        }
+        cardContainer.addView(createSettingRow("FPS Limit / Uncapper", "Set Bedrock target framerate", fpsBlock))
+
+        // Setting 3: Entity Culling
+        cardContainer.addView(createSettingRow(
+            title = "Entity Culling Optimization",
+            subtitle = "Hides non-visible entities to maximize FPS.",
+            widget = Switch(this).apply {
+                isChecked = true
+                setOnCheckedChangeListener { _, isChecked -> graphicsManager.setEntityCullingEnabled(isChecked) }
+            }
+        ))
+
+        // Setting 4: Fast Loading Screen
+        cardContainer.addView(createSettingRow(
+            title = "Fast Loading Screen / Pre-Loader",
+            subtitle = "Buffers chunk assets to speed up world/server joins.",
+            widget = Switch(this).apply {
+                isChecked = true
+                setOnCheckedChangeListener { _, isChecked -> graphicsManager.enableFastLoadingScreen(isChecked) }
+            }
+        ))
+
+        scroll.addView(cardContainer)
+        rootLayout.addView(scroll)
+
+        val launchBtn = Button(this).apply {
+            text = "LAUNCH INK CLIENT"
             setTextColor(Color.parseColor(textWhite))
             typeface = Typeface.DEFAULT_BOLD
-            setPadding(0, 0, 0, 40)
-        }
-
-        val splitGrid = LinearLayout(this@MainActivity).apply {
-            orientation = LinearLayout.HORIZONTAL
-            layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
-        }
-
-        val leftCol = LinearLayout(this@MainActivity).apply {
-            orientation = LinearLayout.VERTICAL
-            layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1.2f)
-            setPadding(0, 0, 30, 0)
-        }
-
-        val contentCard = createCleanCard("Modifications")
-        contentCard.addView(createIconRow(android.R.drawable.ic_menu_gallery, "Resource Packs", "Manage visual assets"))
-        contentCard.addView(createIconRow(android.R.drawable.ic_menu_manage, "Modules (.so)", "Native dynamic libraries"))
-        leftCol.addView(contentCard)
-
-        val rightCol = LinearLayout(this@MainActivity).apply {
-            orientation = LinearLayout.VERTICAL
-            layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
-        }
-
-        val utilCard = createCleanCard("Utilities")
-        utilCard.addView(createIconRow(android.R.drawable.ic_menu_compass, "CurseForge", "Browse repositories"))
-        
-        val launchBtn = Button(this@MainActivity).apply {
-            text = "LAUNCH GAME"
-            setTextColor(Color.parseColor(bgDark))
-            textSize = 16f
-            typeface = Typeface.DEFAULT_BOLD
-            layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 150).apply { setMargins(0, 30, 0, 0) }
             background = GradientDrawable().apply {
-                setColor(Color.parseColor(textWhite))
+                setColor(Color.parseColor(accentPurple))
                 cornerRadius = 16f
             }
-            setOnClickListener { triggerLaunch() }
+            layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 130).apply {
+                setMargins(0, 20, 0, 0)
+            }
+            setOnClickListener {
+                if (!Settings.canDrawOverlays(this@MainActivity)) {
+                    startActivity(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:$packageName")))
+                } else {
+                    startService(Intent(this@MainActivity, InkOverlayService::class.java))
+                    packageManager.getLaunchIntentForPackage("com.mojang.minecraftpe")?.let { startActivity(it) }
+                        ?: Toast.makeText(this@MainActivity, "Minecraft PE was not found.", Toast.LENGTH_SHORT).show()
+                }
+            }
         }
-
-        rightCol.addView(utilCard)
-        rightCol.addView(launchBtn)
-
-        splitGrid.addView(leftCol)
-        splitGrid.addView(rightCol)
-
-        rootLayout.addView(header)
-        rootLayout.addView(splitGrid)
+        rootLayout.addView(launchBtn)
 
         setContentView(rootLayout)
         enforceFullscreen()
     }
 
-    private fun createCleanCard(title: String): LinearLayout {
-        val card = LinearLayout(this@MainActivity).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(40, 40, 40, 40)
+    private fun createSettingRow(title: String, subtitle: String, widget: View): LinearLayout {
+        return LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            setPadding(32, 24, 32, 24)
+            gravity = Gravity.CENTER_VERTICAL
             background = GradientDrawable().apply {
                 setColor(Color.parseColor(cardDark))
-                setStroke(1, Color.parseColor(borderGray))
-                cornerRadius = 24f
+                setStroke(1, Color.parseColor(cardBorder))
+                cornerRadius = 18f
             }
-            layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply {
-                setMargins(0, 0, 0, 30)
+            layoutParams = LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            ).apply { setMargins(0, 0, 0, 16) }
+
+            val labelBlock = LinearLayout(this@MainActivity).apply {
+                orientation = LinearLayout.VERTICAL
+                layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
             }
-        }
-        card.addView(TextView(this@MainActivity).apply {
-            text = title
-            textSize = 14f
-            setTextColor(Color.parseColor(textGray))
-            setPadding(0, 0, 0, 30)
-            isAllCaps = true
-        })
-        return card
-    }
+            labelBlock.addView(TextView(this@MainActivity).apply {
+                text = title
+                setTextColor(Color.parseColor(textWhite))
+                textSize = 14f
+                typeface = Typeface.DEFAULT_BOLD
+            })
+            labelBlock.addView(TextView(this@MainActivity).apply {
+                text = subtitle
+                setTextColor(Color.parseColor(textMuted))
+                textSize = 11f
+            })
 
-    private fun createIconRow(iconRes: Int, title: String, subtitle: String): LinearLayout {
-        val row = LinearLayout(this@MainActivity).apply {
-            orientation = LinearLayout.HORIZONTAL
-            gravity = Gravity.CENTER_VERTICAL
-            setPadding(0, 20, 0, 20)
-        }
-        
-        row.addView(ImageView(this@MainActivity).apply {
-            setImageResource(iconRes)
-            setColorFilter(Color.parseColor(textWhite))
-            layoutParams = LinearLayout.LayoutParams(60, 60).apply { setMargins(0, 0, 30, 0) }
-        })
-
-        val textBlock = LinearLayout(this@MainActivity).apply { orientation = LinearLayout.VERTICAL }
-        textBlock.addView(TextView(this@MainActivity).apply {
-            text = title
-            setTextColor(Color.parseColor(textWhite))
-            textSize = 16f
-        })
-        textBlock.addView(TextView(this@MainActivity).apply {
-            text = subtitle
-            setTextColor(Color.parseColor(textGray))
-            textSize = 12f
-        })
-
-        row.addView(textBlock)
-        return row
-    }
-
-    private fun triggerLaunch() {
-        if (!Settings.canDrawOverlays(this@MainActivity)) {
-            startActivity(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, android.net.Uri.parse("package:$packageName")))
-        } else {
-            startService(Intent(this@MainActivity, FloatingMenuService::class.java))
-            packageManager.getLaunchIntentForPackage("com.mojang.minecraftpe")?.let { startActivity(it) }
+            addView(labelBlock)
+            addView(widget)
         }
     }
 
     private fun enforceFullscreen() {
         try {
             @Suppress("DEPRECATION")
-            window.decorView.systemUiVisibility = (View.SYSTEM_UI_FLAG_FULLSCREEN or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY)
-        } catch (e: Exception) {}
+            window.decorView.systemUiVisibility = (
+                View.SYSTEM_UI_FLAG_FULLSCREEN or
+                View.SYSTEM_UI_FLAG_HIDE_NAVIGATION or
+                View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+            )
+        } catch (_: Exception) {}
     }
 }

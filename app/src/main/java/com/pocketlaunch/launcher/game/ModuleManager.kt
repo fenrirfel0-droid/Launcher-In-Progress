@@ -2,10 +2,37 @@ package com.pocketlaunch.launcher.game
 
 import android.content.Context
 import android.util.Log
+import com.pocketlaunch.launcher.game.module.render.*
+import com.pocketlaunch.launcher.game.module.utilities.*
 
 object ModuleManager {
 
     private val moduleRegistry = mutableMapOf<String, Module>()
+
+    init {
+        registerRenderModules()
+        registerUtilitiesModules()
+    }
+
+    private fun registerRenderModules() {
+        register(HitboxModule())
+        register(InventoryHudModule())
+        register(F3DebugModule())
+        register(FogCustomizerModule())
+        register(CrystalOptimizerModule())
+        register(CpsFpsHudModule())
+        register(AttackIndicatorModule())
+    }
+
+    private fun registerUtilitiesModules() {
+        register(QuickDropModule())
+        register(ZoomModule())
+        register(PerspectiveModule())
+        register(FovModifierModule())
+        register(PackChangerModule())
+        register(ShaderLoaderModule())
+        register(SkinStealerModule())
+    }
 
     fun register(module: Module) {
         moduleRegistry[module.id] = module

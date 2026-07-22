@@ -26,6 +26,7 @@ class InkOverlayService : Service() {
     private var isMenuOpen = false
     private var activeCategory = ModuleCategory.RENDER
 
+    // Ink UI Design Tokens
     private val bgVoid = "#0A0B10"
     private val cardDark = "#131520"
     private val cardBorder = "#1E2235"
@@ -41,6 +42,7 @@ class InkOverlayService : Service() {
 
         rootOverlay = FrameLayout(this)
 
+        // Floating Trigger Button
         val triggerBtn = TextView(this).apply {
             text = "INK"
             setTextColor(Color.parseColor(textWhite))
@@ -55,6 +57,7 @@ class InkOverlayService : Service() {
             layoutParams = FrameLayout.LayoutParams(110, 110)
         }
 
+        // Overlay Main Card
         mainPanel = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             visibility = View.GONE
@@ -69,6 +72,7 @@ class InkOverlayService : Service() {
             }
         }
 
+        // Header Title
         val header = TextView(this).apply {
             text = "INK CLIENT"
             setTextColor(Color.parseColor(textWhite))
@@ -78,6 +82,7 @@ class InkOverlayService : Service() {
         }
         mainPanel.addView(header)
 
+        // Category Tab Bar
         val categoryBar = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             setPadding(0, 0, 0, 20)
@@ -101,6 +106,7 @@ class InkOverlayService : Service() {
         }
         mainPanel.addView(categoryBar)
 
+        // Modules Scroll Container
         val scrollView = ScrollView(this).apply {
             layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f)
             isVerticalScrollBarEnabled = false
@@ -127,6 +133,7 @@ class InkOverlayService : Service() {
             y = 120
         }
 
+        // Touch Listener for Dragging & Opening
         triggerBtn.setOnTouchListener(object : View.OnTouchListener {
             private var initX = 0; private var initY = 0; private var touchX = 0f; private var touchY = 0f
             override fun onTouch(v: View, event: MotionEvent): Boolean {
@@ -205,13 +212,15 @@ class InkOverlayService : Service() {
                 textSize = 10f
             })
 
-            val rightWidget = Switch(this).apply {
+            val switchWidget = Switch(this).apply {
                 isChecked = module.isEnabled
-                setOnCheckedChangeListener { _, _ -> ModuleManager.toggleModule(module.id, this@InkOverlayService) }
+                setOnCheckedChangeListener { _, _ ->
+                    ModuleManager.toggleModule(module.id, this@InkOverlayService)
+                }
             }
 
             card.addView(labelBlock)
-            card.addView(rightWidget)
+            card.addView(switchWidget)
             modulesContainer.addView(card)
         }
     }

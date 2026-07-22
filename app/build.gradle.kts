@@ -5,34 +5,26 @@ plugins {
 
 android {
     namespace = "com.pocketlaunch.launcher"
-    compileSdk = 34 // Stable version for most devices
+    compileSdk = 34
 
     defaultConfig {
         applicationId = "com.pocketlaunch.launcher"
-        minSdk = 24
+        minSdk = 26
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
 
-        // NDK Configuration
         externalNativeBuild {
             cmake {
-                cppFlags += "-std=c++17 -fexceptions -frtti"
-                arguments("-DANDROID_STL=c++_shared")
+                cppFlags += "-std=c++17"
             }
         }
     }
 
     buildTypes {
         release {
-            isMinifyEnabled = true
-            proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
-            )
-        }
-        debug {
-            isDebuggable = true
+            isMinifyEnabled = false
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
     }
 
@@ -45,7 +37,6 @@ android {
         jvmTarget = "17"
     }
 
-    // THIS IS THE CRITICAL BLOCK FOR YOUR C++ CORE
     externalNativeBuild {
         cmake {
             path = file("src/main/cpp/CMakeLists.txt")
